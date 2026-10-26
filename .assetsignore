@@ -1,0 +1,17 @@
+# Files in the repo that should NOT be served on pooprscoopr.com.
+# (Everything else in the folder is the public game.)
+# Same pattern style as .gitignore: one name or pattern per line.
+
+# Cloudflare settings and the server code
+wrangler.jsonc
+worker.js
+functions
+db
+
+# Notes, backups and other non-game files
+*.md
+backups
+.git
+.github
+node_modules
+.wrangler

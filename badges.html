@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PooprScoopr Badges</title>
+  <meta name="description" content="Every badge in PooprScoopr, and how to earn it.">
+  <meta name="theme-color" content="#0f1b2d">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* =============================================================
+       PooprScoopr - the public badge list
+       =============================================================
+       This page does not keep its own copy of the badges. It downloads
+       the game (index.html, from the same folder), finds the BADGE DATA
+       block inside it, and reads that. So when a badge is added to the
+       game, it appears here too - nothing to keep in step by hand.
+
+       If you have played the game in this browser, it also shows which
+       badges you have earned. That comes from this browser's own storage
+       (the same place the game saves badges). Nothing is sent anywhere. */
+
+    :root {
+      --bg: #0f1b2d;
+      --panel: #16263d;
+      --panel-earned: #2a2a1c;
+      --line: #2c3e57;
+      --text: #e8eef6;
+      --muted: #9fb0c6;
+      --gold: #ffdd59;
+      --green: #4ade80;
+      --link: #7fd4ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 'Outfit', system-ui, sans-serif;
+    }
+
+    /* Keyboard users can jump straight past the header. */
+    .skip-link {
+      position: absolute; left: -999px; top: 8px;
+      background: var(--gold); color: #1b1b1d; padding: 8px 12px; border-radius: 8px;
+      font-weight: 800; z-index: 10;
+    }
+    .skip-link:focus { left: 16px; }
+
+    a { color: var(--link); }
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+
+    header { text-align: center; margin-bottom: 18px; }
+    .logo {
+      font: 700 clamp(34px, 7vw, 56px)/1 'Fredoka', sans-serif;
+      margin: 0;
+      color: var(--gold);
+      text-shadow: 0 4px 0 #8a5a00;
+    }
+    .logo span { color: #7bed9f; text-shadow: 0 4px 0 #1e7a3c; }
+    .subtitle { font: 700 20px 'Fredoka', sans-serif; margin: 10px 0 4px; }
+    .lede { color: var(--muted); margin: 0 auto; max-width: 620px; }
+    .play-link {
+      display: inline-block; margin-top: 12px;
+      background: #2ecc71; color: #06260f; text-decoration: none;
+      font: 700 15px 'Fredoka', sans-serif; padding: 9px 18px; border-radius: 999px;
+    }
+
+    /* The tally and the filter buttons. */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+      margin: 20px 0 8px;
+    }
+    .tally { color: var(--muted); font-weight: 600; }
+    .tally strong { color: var(--gold); }
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filters button {
+      font: 700 13px 'Outfit', sans-serif;
+      padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      border: 2px solid var(--line); background: transparent; color: var(--text);
+    }
+    .filters button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+
+    /* One section per category. */
+    section { margin-top: 26px; }
+    section h2 { font: 700 22px 'Fredoka', sans-serif; color: var(--gold); margin: 0; }
+    section .blurb { color: var(--muted); margin: 2px 0 10px; }
+
+    .grid {
+      list-style: none; margin: 0; padding: 0;
+      display: grid; gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    }
+    .badge {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: var(--panel); border: 2px solid var(--line); border-radius: 14px;
+      padding: 12px;
+    }
+    .badge.earned { border-color: var(--gold); background: var(--panel-earned); }
+    .badge svg { flex-shrink: 0; width: 58px; height: 58px; }
+    .badge h3 { margin: 0 0 2px; font-size: 15px; font-weight: 800; }
+    .badge p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .tags { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+      padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: var(--muted);
+    }
+    .tag.earned { background: rgba(74, 222, 128, 0.15); color: var(--green); }
+    .tag.bronze { color: #e0a36a; } .tag.silver { color: #dfe6ea; }
+    .tag.gold { color: var(--gold); } .tag.diamond { color: #7fe8ff; }
+
+    .progress {
+      margin-top: 6px; height: 6px; border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1); overflow: hidden;
+    }
+    .progress span { display: block; height: 100%; background: var(--green); }
+    .progress-text { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .notice {
+      background: var(--panel); border: 2px dashed var(--line); border-radius: 14px;
+      padding: 18px; text-align: center; color: var(--muted); margin-top: 24px;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 40px; }
+
+    @media (max-width: 520px) {
+      .grid { grid-template-columns: 1fr; }
+      .toolbar { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#badges">Skip to the badges</a>
+
+  <div class="wrap">
+    <header>
+      <h1 class="logo">Poopr<span>Scoopr</span></h1>
+      <p class="subtitle">All the badges</p>
+      <p class="lede">Punny accolades for heroic park-cleaning duties. Some take one good day.
+        Some take a very long time - on purpose. A few are secret until you earn them.</p>
+      <a class="play-link" href="./">Play PooprScoopr</a>
+    </header>
+
+    <div class="toolbar">
+      <p class="tally" id="tally" aria-live="polite"></p>
+      <div class="filters" role="group" aria-label="Show">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="earned" aria-pressed="false">Earned</button>
+        <button type="button" data-filter="todo" aria-pressed="false">Not yet</button>
+      </div>
+    </div>
+
+    <main id="badges" tabindex="-1">
+      <p class="notice" id="loading">Loading the badges...</p>
+    </main>
+
+    <footer>
+      <p>Your badges are saved only in this browser. Nothing is sent anywhere.</p>
+    </footer>
+  </div>
+
+  <script>
+    // =============================================================
+    // 1. READ THE BADGE LIST OUT OF THE GAME
+    // =============================================================
+    // Download index.html as plain text, turn it into a document we can
+    // search (DOMParser does NOT run any of its scripts), and read the
+    // JSON inside <script id="badge-data">.
+    async function loadBadgeData() {
+      const response = await fetch('index.html', { cache: 'no-cache' });
+      if (!response.ok) throw new Error('Could not load the game page');
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const block = doc.getElementById('badge-data');
+      if (!block) throw new Error('No badge data found in the game page');
+      return JSON.parse(block.textContent);
+    }
+
+    // =============================================================
+    // 2. WHAT HAS THIS BROWSER EARNED?
+    // =============================================================
+    // The game saves earned badges and career numbers in localStorage.
+    // Reading can fail (private browsing, storage switched off), so it is
+    // wrapped in try/catch and simply shows nothing earned if so.
+    function readSaved(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (err) {
+        return fallback;
+      }
+    }
+    const earned = readSaved('poopr_scoopr_badges', {});     // { badgeId: timestamp }
+    const stats = readSaved('poopr_scoopr_stats', {});       // { totalScooped: 312, ... }
+
+    // =============================================================
+    // 3. DRAW A BADGE
+    // =============================================================
+    // The same drawing as the game's badgeIcon(): a 12x12 grid of blocks,
+    // each with a lit top edge, on a studded baseplate with a coloured frame.
+    // (If you change one, change the other.)
+    const TIER_COLOURS = { bronze: '#cd7f32', silver: '#cfd8dc', gold: '#ffdd59', diamond: '#7fe8ff' };
+    const SECRET_MOTIF = [
+      '............', '....kkkk....', '...kwwwwk...', '..kwwkkwwk..',
+      '..kkk..kwk..', '......kwwk..', '.....kwwk...', '.....kwk....',
+      '.....kkk....', '.....kwk....', '.....kkk....', '............'
+    ];
+
+    function shadeHex(hex, amount) {
+      const num = parseInt(hex.slice(1), 16);
+      const clamp = (v) => Math.max(0, Math.min(255, v));
+      return 'rgb(' + clamp(((num >> 16) & 255) + amount) + ',' +
+             clamp(((num >> 8) & 255) + amount) + ',' + clamp((num & 255) + amount) + ')';
+    }
+
+    function badgeSvg(data, badge, isEarned) {
+      const motif = (badge.secret && !isEarned) ? SECRET_MOTIF : data.motifs[badge.motif || badge.id];
+      const CELL = 4, MARGIN = 5, SIZE = 12 * CELL + MARGIN * 2;
+      let cells = '';
+      for (let row = 0; row < 12; row++) {
+        for (let col = 0; col < 12; col++) {
+          const ch = motif[row][col];
+          if (ch === '.') continue;
+          const base = isEarned ? data.palette[ch] : '#5b666f';
+          const x = MARGIN + col * CELL, y = MARGIN + row * CELL;
+          cells += '<rect x="' + x + '" y="' + y + '" width="' + CELL + '" height="' + CELL + '" fill="' + base + '"/>';
+          if ((row > 0 ? motif[row - 1][col] : '.') !== ch) {
+            cells += '<rect x="' + x + '" y="' + y + '" width="' + CELL + '" height="1" fill="' + shadeHex(base, 40) + '"/>';
+          }
+          if ((row < 11 ? motif[row + 1][col] : '.') !== ch) {
+            cells += '<rect x="' + x + '" y="' + (y + CELL - 1) + '" width="' + CELL + '" height="1" fill="#000" opacity="0.3"/>';
+          }
+        }
+      }
+      const frame = isEarned ? (TIER_COLOURS[badge.tier] || TIER_COLOURS.gold) : '#3d474f';
+      return '<svg viewBox="0 0 ' + SIZE + ' ' + SIZE + '" aria-hidden="true">' +
+             '<rect width="' + SIZE + '" height="' + SIZE + '" rx="7" fill="' + (isEarned ? '#2f3a45' : '#232a31') + '"/>' +
+             '<rect x="1.5" y="1.5" width="' + (SIZE - 3) + '" height="' + (SIZE - 3) +
+             '" rx="6" fill="none" stroke="' + frame + '" stroke-width="2.5"/>' + cells + '</svg>';
+    }
+
+    // =============================================================
+    // 4. BUILD THE PAGE
+    // =============================================================
+    // Words go in with textContent (never innerHTML), so nothing in the
+    // data can ever be treated as code. Only our own SVG uses innerHTML.
+    let badgeData = null;
+    let currentFilter = 'all';
+
+    function render() {
+      const main = document.getElementById('badges');
+      main.innerHTML = '';
+      const all = badgeData.badges;
+      const earnedCount = all.filter(b => earned[b.id]).length;
+      const tally = document.getElementById('tally');
+      tally.innerHTML = '';
+      const strong = document.createElement('strong');
+      strong.textContent = earnedCount + ' of ' + all.length;
+      tally.appendChild(document.createTextNode(earnedCount ? 'You have earned ' : 'There are '));
+      tally.appendChild(earnedCount ? strong : document.createTextNode(all.length));
+      tally.appendChild(document.createTextNode(earnedCount ? ' badges in this browser.' : ' badges to earn.'));
+
+      badgeData.categories.forEach(cat => {
+        const list = all.filter(b => b.category === cat.id).filter(b => {
+          if (currentFilter === 'earned') return !!earned[b.id];
+          if (currentFilter === 'todo') return !earned[b.id];
+          return true;
+        });
+        if (list.length === 0) return;
+
+        const section = document.createElement('section');
+        const h2 = document.createElement('h2');
+        h2.textContent = cat.name;
+        const blurb = document.createElement('p');
+        blurb.className = 'blurb';
+        blurb.textContent = cat.blurb;
+        const ul = document.createElement('ul');
+        ul.className = 'grid';
+
+        list.forEach(b => {
+          const isEarned = !!earned[b.id];
+          const hidden = b.secret && !isEarned;          // secrets stay ??? until earned
+          const li = document.createElement('li');
+          li.className = 'badge' + (isEarned ? ' earned' : '');
+          li.innerHTML = badgeSvg(badgeData, b, isEarned);
+          const text = document.createElement('div');
+          const h3 = document.createElement('h3');
+          h3.textContent = hidden ? '???' : b.name;
+          const p = document.createElement('p');
+          p.textContent = hidden ? 'A secret badge. Keep playing - you will know it when it happens.' : b.desc;
+          text.appendChild(h3);
+          text.appendChild(p);
+
+          const tags = document.createElement('div');
+          tags.className = 'tags';
+          const addTag = (words, cls) => {
+            const t = document.createElement('span');
+            t.className = 'tag' + (cls ? ' ' + cls : '');
+            t.textContent = words;
+            tags.appendChild(t);
+          };
+          if (isEarned) addTag('Earned', 'earned');
+          if (b.tier) addTag(b.tier, b.tier);
+          if (b.secret) addTag('Secret');
+          if (tags.childNodes.length) text.appendChild(tags);
+
+          // Progress for the counting badges, from this browser's saved numbers.
+          if (b.stat && b.goal && !isEarned && !hidden) {
+            const have = Math.min(b.goal, Math.floor(stats[b.stat] || 0));
+            const bar = document.createElement('div');
+            bar.className = 'progress';
+            bar.setAttribute('role', 'progressbar');
+            bar.setAttribute('aria-valuemin', '0');
+            bar.setAttribute('aria-valuemax', String(b.goal));
+            bar.setAttribute('aria-valuenow', String(have));
+            bar.setAttribute('aria-label', b.name + ' progress');
+            const fill = document.createElement('span');
+            fill.style.width = Math.round(100 * have / b.goal) + '%';
+            bar.appendChild(fill);
+            const nums = document.createElement('div');
+            nums.className = 'progress-text';
+            nums.textContent = have.toLocaleString() + ' / ' + b.goal.toLocaleString();
+            text.appendChild(bar);
+            text.appendChild(nums);
+          }
+          li.appendChild(text);
+          ul.appendChild(li);
+        });
+
+        section.appendChild(h2);
+        section.appendChild(blurb);
+        section.appendChild(ul);
+        main.appendChild(section);
+      });
+
+      if (!main.children.length) {
+        const none = document.createElement('p');
+        none.className = 'notice';
+        none.textContent = currentFilter === 'earned' ? 'No badges earned in this browser yet. Go scoop!' : 'You have earned every badge. Wow.';
+        main.appendChild(none);
+      }
+    }
+
+    // The filter buttons (All / Earned / Not yet).
+    document.querySelectorAll('.filters button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.filters button').forEach(b =>
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+        if (badgeData) render();
+      });
+    });
+
+    loadBadgeData()
+      .then(data => { badgeData = data; render(); })
+      .catch(() => {
+        // Most likely opened straight from a folder (file://), where
+        // browsers do not let one page read another.
+        const msg = document.getElementById('loading');
+        msg.textContent = 'The badge list could not be loaded. This page reads the badges from the game, ' +
+          'so it needs to be opened from the game’s website (or a local web server), not straight from a folder.';
+      });
+  </script>
+</body>
+</html>

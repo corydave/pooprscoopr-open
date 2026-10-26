@@ -1,0 +1,16 @@
+// Public copy. Replace the placeholder with the ID of your own D1 database
+// (Storage & Databases > D1 > your database), then deploy with:
+//   npx wrangler deploy
+{
+  "name": "pooprscoopr",
+  "main": "worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": { "directory": ".", "binding": "ASSETS" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pooprscoopr",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ]
+}

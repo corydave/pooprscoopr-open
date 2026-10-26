@@ -1,0 +1,10 @@
+# Safety net: these never belong in this repo, even if they end up here by mistake.
+older-versions/
+backups/
+pooprscoopr-gdd.md
+Claude outputs/
+pooprscoopr-open/
+*.zip
+ps-*.html
+.DS_Store
+Icon?
